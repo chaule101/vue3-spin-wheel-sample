@@ -1,19 +1,19 @@
 <template>
-  <div class="spin-wheel-container" :style="{ width: size + 'px', height: size + 'px' }">
+  <div class="spin-wheel-container relative inline-block rounded-full bg-[#fbbf24]" :style="{ '--wheel-size': size + 'px' }">
     <svg
-      :width="size"
-      :height="size"
-      class="spin-wheel-svg"
+      :viewBox="`0 0 ${size} ${size}`"
+      class="spin-wheel-svg block select-none w-full h-full"
       :class="{ spinning: isSpinning }"
       :style="{
         transform: `rotate(${rotation}deg)`,
         transition: (isSpinning || isFinalizing) ? 'none' : 'transform 0.3s ease-out'
       }"
+      preserveAspectRatio="xMidYMid meet"
     >
       <defs>
-        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+        <!-- <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
           <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3" />
-        </filter>
+        </filter> -->
         <pattern id="borderPattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
           <path d="M 0 15 L 7.5 15 L 7.5 7.5 L 15 7.5 L 15 0 L 22.5 0 L 22.5 7.5 L 30 7.5 L 30 15 L 22.5 15 L 22.5 22.5 L 15 22.5 L 15 30 L 7.5 30 L 7.5 22.5 L 0 22.5 Z"
             fill="#4a9b8e" opacity="0.8"/>
@@ -42,13 +42,13 @@
         <g v-for="(item, index) in items" :key="index">
           <path
             :d="getSectorPath(index)"
-            :fill="item.color || getDefaultColor(index)"
+            :fill="item.color || segmentColor"
             :stroke="borderColor"
             :stroke-width="borderWidth"
             filter="url(#shadow)"
             class="sector"
           />
-          <!-- Image in sector -->
+          <!-- hình trong item -->
           <g v-if="item.image" :transform="getImageTransform(index)">
             <image
               :href="item.image"
@@ -56,14 +56,14 @@
               :y="-(item.imageSize || 60) / 2"
               :width="item.imageSize || 60"
               :height="item.imageSize || 60"
-              class="sector-image"
+              class="sector-image select-none pointer-events-none"
             />
           </g>
-          <!-- Text label -->
+          <!-- text trong item -->
           <text
             text-anchor="middle"
             :transform="getTextTransform(index)"
-            class="sector-text"
+            class="sector-text select-none pointer-events-none"
             :fill="item.textColor || textColor"
             :font-size="fontSize"
             :font-weight="fontWeight"
@@ -73,25 +73,20 @@
         </g>
       </g>
     </svg>
-    <div class="spin-wheel-center" v-if="showCenterButton">
+    <div class="spin-wheel-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10 bg-[#feebc2] border-2 border-[#cec19a] rounded-full p-2.5 transition-all duration-300" :style="{ padding: (size * 0.025) + 'px', '--button-size': centerButtonSize + 'px', '--button-font-size': centerButtonFontSize + 'px' }">
+      <svg class="pointer arrow-up select-none pointer-events-none" viewBox="0 0 40 20" :style="{ width: (size * 0.133) + 'px', height: (size * 0.05) + 'px', maxWidth: '80px', maxHeight: '30px' }">
+        <path d="M 0 20 Q 20 10, 40 20 L 20 0 Z" fill="#f00" />
+      </svg>
       <button
-        class="spin-button relative"
+        class="spin-button"
         @click="spin"
         :disabled="isSpinning"
-        :style="{
-          width: centerButtonSize + 'px',
-          height: centerButtonSize + 'px',
-          fontSize: centerButtonFontSize + 'px'
-        }"
       >
         <span class="spin-button-text">
           <span v-for="(line, index) in buttonTextLines" :key="index" class="spin-button-line">
             {{ line }}
           </span>
         </span>
-        <div class="pointer arrow-up">
-
-        </div>
       </button>
     </div>
   </div>
@@ -105,33 +100,33 @@ export default {
       type: Array,
       required: true
     },
+    segmentColor: {
+      type: String,
+      default: '#fee4a7'
+    },
     size: {
       type: Number,
       default: 400
     },
     borderWidth: {
       type: Number,
-      default: 2
+      default: 1
     },
     borderColor: {
       type: String,
-      default: '#ffffff'
+      default: '#d7c078'
     },
     textColor: {
       type: String,
-      default: '#000000'
+      default: '#a88a43'
     },
     fontSize: {
       type: Number,
-      default: 14
+      default: 18
     },
     fontWeight: {
       type: [String, Number],
       default: 'bold'
-    },
-    showCenterButton: {
-      type: Boolean,
-      default: true
     },
     spinButtonText: {
       type: String,
@@ -198,14 +193,7 @@ export default {
     },
   },
   methods: {
-    getDefaultColor(index) {
-      const colors = [
-        '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A',
-        '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2',
-        '#F8B739', '#95A5A6', '#E74C3C', '#3498DB'
-      ]
-      return colors[index % colors.length]
-    },
+
     getSectorPath(index) {
       const startAngle = (index * this.anglePerItem - 90) * (Math.PI / 180)
       const endAngle = ((index + 1) * this.anglePerItem - 90) * (Math.PI / 180)
@@ -219,6 +207,8 @@ export default {
 
       return `M 0 0 L ${x1} ${y1} A ${this.radius} ${this.radius} 0 ${largeArc} 1 ${x2} ${y2} Z`
     },
+
+    // điều chỉnh hướng của text trong item
     getTextTransform(index) {
       const angle = (index * this.anglePerItem + this.anglePerItem / 2 - 90) * (Math.PI / 180)
       const textRadius = this.radius * 0.85
@@ -226,17 +216,23 @@ export default {
       const y = textRadius * Math.sin(angle)
       const rotationAngle = index * this.anglePerItem + this.anglePerItem / 2
 
-      return `translate(${x}, ${y}) rotate(${rotationAngle > 90 && rotationAngle < 270 ? rotationAngle + 180 : rotationAngle})`
+      return `translate(${x}, ${y}) rotate(${rotationAngle})`
+
+      // return `translate(${x}, ${y}) rotate(${rotationAngle > 90 && rotationAngle < 270 ? rotationAngle + 180 : rotationAngle})`
     },
+
+    // điều chỉnh hướng của hình trong item
     getImageTransform(index) {
       const angle = (index * this.anglePerItem + this.anglePerItem / 2 - 90) * (Math.PI / 180)
       const imageRadius = this.radius * 0.5
       const x = imageRadius * Math.cos(angle)
       const y = imageRadius * Math.sin(angle)
       const rotationAngle = index * this.anglePerItem + this.anglePerItem / 2
-
-      return `translate(${x}, ${y}) rotate(${rotationAngle > 90 && rotationAngle < 270 ? rotationAngle + 180 : rotationAngle})`
+      return `translate(${x}, ${y}) rotate(${rotationAngle})`
+      // return `translate(${x}, ${y}) rotate(${rotationAngle > 90 && rotationAngle < 270 ? rotationAngle + 180 : rotationAngle})`
     },
+
+    // action bấm quay
     async spin() {
       if (this.isSpinning || this.items.length === 0) return
 
@@ -416,23 +412,35 @@ export default {
 
 <style scoped>
 .spin-wheel-container {
-  position: relative;
-  display: inline-block;
-  width: 350px;
-  height: 350px;
-  border-radius: 50%;
-  background-color: #fbbf24; /* Match the yellow border to fill any gaps */
-
-  /* Three circular borders: black (outer), green (middle), yellow (inner) */
+  /* 3 vòng bo tròn */
   box-shadow:
-    0 0 0 10px #fbbf24,       /* Black border - outermost */
-    0 0 0 20px #335D6B,       /* Green border - middle */
-    0 0 0 30px #2C434D;       /* Yellow border - innermost */
+    0 0 0 10px #fdf3bf,
+    0 0 0px 20px #01aa8d,
+    0 0 0 30px #053b2b;
+  /* Responsive sizing - maintain perfect circle */
+  width: 100%;
+  max-width: var(--wheel-size, 400px);
+  aspect-ratio: 1 / 1;
+  height: auto;
 }
 
-.spin-wheel-svg {
-  display: block;
-  user-select: none;
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .spin-wheel-container {
+    box-shadow:
+      0 0 0 5px #fdf3bf,
+      0 0 0px 10px #01aa8d,
+      0 0 0 15px #053b2b;
+  }
+}
+
+@media (max-width: 480px) {
+  .spin-wheel-container {
+    box-shadow:
+      0 0 0 3px #fdf3bf,
+      0 0 0px 6px #01aa8d,
+      0 0 0 9px #053b2b;
+  }
 }
 
 .sector {
@@ -440,69 +448,78 @@ export default {
   transition: opacity 0.2s;
 }
 
-.sector:hover {
-  opacity: 0.8;
-}
-
-.sector-text {
-  pointer-events: none;
-  user-select: none;
-}
-
-.sector-image {
-  pointer-events: none;
-  user-select: none;
-}
-
-.decorative-border {
-  pointer-events: none;
-}
-
-.spin-wheel-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 5;
-  background: hsl(49, 95%, 30%);
-  border-radius: 50%;
-  padding: 10px;
+.spin-wheel-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .spin-button {
-  border-radius: 50%;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
-  color: #8b4513;
-  cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 4px 20px rgba(255, 215, 0, 0.5), inset 0 2px 10px rgba(255, 255, 255, 0.3);
-  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  width: var(--button-size, 80px);
+  height: var(--button-size, 80px);
+  font-size: var(--button-font-size, 16px);
+  min-width: 50px;
+  min-height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #fadd4c 0%, #fae160 50%, #fbe474 100%);
+  color: #8b4513;
+  cursor: pointer;
+  font-weight: bold;
+  border: 2px solid rgba(212, 169, 58, 0.7);
+  box-shadow:
+    0 4px 20px rgba(255, 215, 0, 0.5),
+    inset 0 2px 10px rgba(255, 255, 255, 0.3),
+    inset 0 -2px 8px rgba(212, 169, 58, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.spin-button:active {
+  transform: scale(0.95);
+  box-shadow:
+    inset 0 2px 8px rgba(212, 169, 58, 0.3),
+    inset 0 -2px 6px rgba(212, 169, 58, 0.2);
 }
 
 .spin-button:disabled {
   cursor: not-allowed;
 }
 
-.pointer {
-  pointer-events: none;
-}
-
 .arrow-up {
   position: absolute;
-  overflow: hidden;
-  bottom: 100%;
-  z-index: -2;
+  bottom: calc(100% - 6px);
   left: 50%;
   transform: translateX(-50%);
-  width: 0;
-  height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-bottom: 20px solid #f00
+}
+
+/* Responsive font sizes for text and button */
+@media (max-width: 768px) {
+  .sector-text {
+    font-size: 0.9em !important;
+  }
+
+  .spin-button {
+    font-size: 0.9em !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .sector-text {
+    font-size: 0.75em !important;
+  }
+
+  .spin-button {
+    font-size: 0.8em !important;
+  }
+
+  .spin-wheel-center {
+    padding: 8px !important;
+  }
 }
 </style>
 
