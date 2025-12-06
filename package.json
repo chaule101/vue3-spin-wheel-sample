@@ -1,0 +1,56 @@
+{
+  "name": "vue3-spin-wheel",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A customizable spin wheel component for Vue 3",
+  "main": "./dist/vue3-spin-wheel.umd.js",
+  "module": "./dist/vue3-spin-wheel.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/vue3-spin-wheel.es.js"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/vue3-spin-wheel.umd.js"
+      }
+    },
+    "./style.css": "./dist/style.css",
+    "./dist/style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "vue3",
+    "spin-wheel",
+    "wheel",
+    "roulette",
+    "component"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "vue": "^3.4.0"
+  },
+  "scripts": {
+    "dev": "vite --config vite.demo.config.ts",
+    "build": "vue-tsc --project tsconfig.build.json && vite build",
+    "build:demo": "vite build --config vite.demo.config.ts",
+    "preview": "vite preview"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.3.0",
+    "vite": "^5.0.0",
+    "vue": "^3.4.0",
+    "vue-tsc": "^1.8.0"
+  }
+}
+
