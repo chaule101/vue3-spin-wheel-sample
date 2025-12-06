@@ -75,7 +75,7 @@
     </svg>
     <div class="spin-wheel-center" v-if="showCenterButton">
       <button
-        class="spin-button"
+        class="spin-button relative"
         @click="spin"
         :disabled="isSpinning"
         :style="{
@@ -84,10 +84,16 @@
           fontSize: centerButtonFontSize + 'px'
         }"
       >
-        {{ spinButtonText }}
+        <span class="spin-button-text">
+          <span v-for="(line, index) in buttonTextLines" :key="index" class="spin-button-line">
+            {{ line }}
+          </span>
+        </span>
+        <div class="pointer arrow-up">
+
+        </div>
       </button>
     </div>
-    <div class="pointer" :style="pointerStyle"></div>
   </div>
 </template>
 
@@ -181,49 +187,15 @@ export default {
     anglePerItem() {
       return 360 / this.items.length
     },
-    pointerStyle() {
-      const position = this.pointerPosition
-      const size = this.pointerSize
-      const color = this.pointerColor
-      const center = this.size / 2
-
-      let style = {
-        position: 'absolute',
-        width: '0',
-        height: '0',
-        borderStyle: 'solid',
-        zIndex: '10'
+    buttonTextLines() {
+      // Split by space or newline, or use the text as-is if no space
+      if (this.spinButtonText.includes(' ')) {
+        return this.spinButtonText.split(' ')
+      } else if (this.spinButtonText.includes('\n')) {
+        return this.spinButtonText.split('\n')
       }
-
-      switch (position) {
-        case 'top':
-          style.left = center - size + 'px'
-          style.top = '0px'
-          style.borderWidth = `0 ${size}px ${size * 1.5}px ${size}px`
-          style.borderColor = `transparent transparent ${color} transparent`
-          break
-        case 'bottom':
-          style.left = center - size + 'px'
-          style.bottom = '0px'
-          style.borderWidth = `${size * 1.5}px ${size}px 0 ${size}px`
-          style.borderColor = `${color} transparent transparent transparent`
-          break
-        case 'left':
-          style.left = '0px'
-          style.top = center - size + 'px'
-          style.borderWidth = `${size}px ${size * 1.5}px ${size}px 0`
-          style.borderColor = `transparent ${color} transparent transparent`
-          break
-        case 'right':
-          style.right = '0px'
-          style.top = center - size + 'px'
-          style.borderWidth = `${size}px 0 ${size}px ${size * 1.5}px`
-          style.borderColor = `transparent transparent transparent ${color}`
-          break
-      }
-
-      return style
-    }
+      return [this.spinButtonText]
+    },
   },
   methods: {
     getDefaultColor(index) {
@@ -492,11 +464,13 @@ export default {
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 5;
+  background: hsl(49, 95%, 30%);
+  border-radius: 50%;
+  padding: 10px;
 }
 
 .spin-button {
   border-radius: 50%;
-  border: 4px solid #ffffff;
   background: linear-gradient(135deg, #ffd700 0%, #ffed4e 50%, #ffd700 100%);
   color: #8b4513;
   cursor: pointer;
@@ -509,22 +483,26 @@ export default {
   text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
-.spin-button:hover:not(:disabled) {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
-}
-
-.spin-button:active:not(:disabled) {
-  transform: scale(0.95);
-}
-
 .spin-button:disabled {
-  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .pointer {
   pointer-events: none;
+}
+
+.arrow-up {
+  position: absolute;
+  overflow: hidden;
+  bottom: 100%;
+  z-index: -2;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 20px solid #f00
 }
 </style>
 

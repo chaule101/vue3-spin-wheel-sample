@@ -2,7 +2,7 @@
 	<div class="min-h-screen bg-[#e3e3ce] p-5">
 		<div class="max-w-7xl mx-auto">
 			<h1 class="text-center text-white text-4xl mb-10 drop-shadow-lg">
-				Vòng Quay May Mắn
+				Spin Wheel Demo
 			</h1>
 
 			<div class="flex flex-col items-center justify-center">
@@ -15,7 +15,7 @@
 					pointerPosition="top"
 					:pointerColor="'#ff0000'"
 					:showCenterButton="true"
-					spinButtonText="QUAY SỐ"
+					spinButtonText="RUN"
 					:centerButtonSize="100"
 					:centerButtonFontSize="18"
 					:borderWidth="4"
@@ -25,12 +25,12 @@
 					@spin-start="handleSpinStart"
 					@spin-end="handleFoodSelected"
 				/>
-				<div
+				<!-- <div
 					v-if="foodSelected && !isSpinning"
 					class="mt-5 p-4 bg-gradient-to-r from-pink-400 to-red-500 rounded-lg text-white animate-bounce"
 				>
 					<h3 class="text-xl">🎉 Chúc mừng: {{ foodSelected.label }} 🎉</h3>
-				</div>
+				</div> -->
 			</div>
 		</div>
 	</div>
