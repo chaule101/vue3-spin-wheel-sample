@@ -16,7 +16,7 @@ npm install vue3-spin-wheel
 <template>
   <SpinWheel
     :items="items"
-    :size="400"
+    :size="600"
     @spin-start="handleSpinStart"
     @spin-end="handleSpinEnd"
   />

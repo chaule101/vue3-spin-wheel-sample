@@ -118,7 +118,7 @@ export default {
     },
     size: {
       type: Number,
-      default: 400
+      default: 600
     },
     borderWidth: {
       type: Number,
@@ -167,7 +167,7 @@ export default {
     },
     duration: {
       type: Number,
-      default: 3000
+      default: 4000
     },
     spins: {
       type: Number,
@@ -211,6 +211,7 @@ export default {
   },
   methods: {
 
+    // tạo SVG path cho từng item
     getSectorPath(index) {
       const startAngle = (index * this.anglePerItem - 90) * (Math.PI / 180)
       const endAngle = ((index + 1) * this.anglePerItem - 90) * (Math.PI / 180)
@@ -225,7 +226,7 @@ export default {
       return `M 0 0 L ${x1} ${y1} A ${this.radius} ${this.radius} 0 ${largeArc} 1 ${x2} ${y2} Z`
     },
 
-    // Generate border path for Greek key pattern motif around segment
+    // tạo SVG path cho border pattern motif xung quanh segment
     getSegmentBorderPath(index) {
       const borderWidth = 15 // Width of the decorative border
       const outerRadius = this.radius
@@ -246,7 +247,7 @@ export default {
 
       const largeArc =  0
 
-      // Create a ring path: outer arc -> line -> inner arc (reverse) -> line back
+      // tạo SVG path cho ring: outer arc -> line -> inner arc (reverse) -> line back
       return `M ${x1Outer} ${y1Outer}
               A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2Outer} ${y2Outer}
               L ${x2Inner} ${y2Inner}
@@ -257,7 +258,7 @@ export default {
     // điều chỉnh hướng của text trong item
     getTextTransform(index) {
       const angle = (index * this.anglePerItem + this.anglePerItem / 2 - 90) * (Math.PI / 180)
-      const textRadius = this.radius * 0.85
+      const textRadius = this.radius * 0.75
       const x = textRadius * Math.cos(angle)
       const y = textRadius * Math.sin(angle)
       const rotationAngle = index * this.anglePerItem + this.anglePerItem / 2
@@ -347,24 +348,28 @@ export default {
       }
     },
 
+    ressetSpinState() {
+      this.isSpinning = false
+      this.isFinalizing = false
+    },
+
     finalizeSpinToResult() {
       // prevent calling multiple times
       if (this.isFinalizing) {
         return
       }
-
+      // Tìm index của item trúng thưởng
       const resultIndex = this.items.findIndex(item => item.id === this.serverResultId)
       if (resultIndex === -1) {
-        this.isSpinning = false
-        this.isFinalizing = false
+        this.ressetSpinState()
         return
       }
 
-      // Mark as finalizing to prevent re-entry
+      // đánh dấu là đang finalizing để tránh gọi lại
       this.isFinalizing = true
       this.shouldStopSpinning = true
 
-      // Ensure all animations are stopped
+      // Stop mọi animation đang chạy
       if (this.spinningAnimationId) {
         cancelAnimationFrame(this.spinningAnimationId)
         this.spinningAnimationId = null
@@ -374,11 +379,11 @@ export default {
         this.finalizeAnimationId = null
       }
 
-      // Get the current rotation value (may be very large due to continuous spinning)
+      // lấy giá trị rotation hiện tại (có thể rất lớn do continuous spinning)
       const currentRotation = this.rotation
 
-      // Calculate pointer offset based on pointer position
-      // Items are measured from top (0 degrees) going clockwise
+      // tính toán offset của pointer dựa trên vị trí của pointer
+      // các item được đo từ trên (0 độ) theo chiều kim đồng hồ
       let pointerOffset = 0
       switch (this.pointerPosition) {
         case 'top':
@@ -395,26 +400,25 @@ export default {
           break
       }
 
-      // Calculate the target angle for the item (where the pointer should point)
-      // Item at index i has center at: i * anglePerItem + anglePerItem / 2 (measured from top, clockwise)
-      // To align item center with pointer, we need: (pointerOffset - itemCenterAngle) mod 360
+      // tính toán góc mục tiêu cho item (vị trí mà pointer nên trỏ đến)
+      // item ở index i có tâm tại: i * anglePerItem + anglePerItem / 2 (đo từ trên, theo chiều kim đồng hồ)
+      // để đặt tâm item trùng với pointer, chúng ta cần: (pointerOffset - itemCenterAngle) mod 360
       const itemCenterAngle = resultIndex * this.anglePerItem + this.anglePerItem / 2
       const targetAngleNormalized = ((pointerOffset - itemCenterAngle) % 360 + 360) % 360
 
-      // Normalize current rotation to 0-360 range to calculate difference
+      // chuẩn hóa rotation hiện tại thành khoảng 0-360 để tính toán sự khác biệt
       const currentRotationNormalized = ((currentRotation % 360) + 360) % 360
 
-      // Calculate the difference between current and target
+      // tính toán sự khác biệt giữa rotation hiện tại và mục tiêu
       let angleDifference = targetAngleNormalized - currentRotationNormalized
 
-      // Always spin forward (positive direction)
-      // If the difference is negative, add 360 to make it positive
+      // luôn quay theo chiều kim đồng hồ (hướng dương)
+      // nếu sự khác biệt là âm, thêm 360 để làm dương
       if (angleDifference < 0) {
         angleDifference += 360
       }
 
-      // Add extra full rotations for natural spinning effect
-      // Ensure at least 'spins' number of full rotations
+      // luôn quay thêm 'spins' số vòng tròn để tạo hiệu ứng quay tự nhiên
       const extraRounds = this.spins
       const totalAdditionalRotation = extraRounds * 360 + angleDifference
 
@@ -426,24 +430,23 @@ export default {
       const duration = this.duration
 
       const animate = () => {
-        // Check if we should continue (prevent race conditions)
+        // kiểm tra xem có nên tiếp tục không (tránh xung đột)
         if (!this.isFinalizing) {
           return
         }
 
         const elapsed = Date.now() - startTime
         const progress = Math.min(elapsed / duration, 1)
-        // Ease-out cubic for smooth deceleration
+        // ease-out cubic cho hiệu ứng giảm tốc độ mượt mà
         const easeOut = 1 - Math.pow(1 - progress, 3)
         this.rotation = startRotation + (totalAdditionalRotation * easeOut)
 
         if (progress < 1) {
           this.finalizeAnimationId = requestAnimationFrame(animate)
         } else {
-          // Animation complete
+          // animation hoàn thành
           this.rotation = endRotation
-          this.isSpinning = false
-          this.isFinalizing = false
+          this.ressetSpinState()
           this.finalizeAnimationId = null
           this.$emit('spinEnd', this.items[resultIndex], resultIndex)
           this.serverResultId = null
@@ -492,7 +495,6 @@ export default {
 .sector {
   cursor: pointer;
   transition: opacity 0.2s;
-  /* border-image doesn't work on SVG elements - use stroke with pattern instead */
 }
 
 .spin-wheel-svg {
@@ -539,7 +541,7 @@ export default {
 
 .arrow-up {
   position: absolute;
-  bottom: calc(100% - 6px);
+  bottom: calc(100% - 8px);
   left: 50%;
   transform: translateX(-50%);
 }

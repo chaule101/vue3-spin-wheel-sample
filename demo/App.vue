@@ -7,16 +7,8 @@
 		<div class="flex flex-col items-center justify-center w-full max-w-[600px] aspect-square">
 			<SpinWheel
 				ref="spinWheel"
-				:items="foodItems"
-				:size="600"
-				:duration="4000"
-				:spins="8"
-				pointerPosition="top"
-				:pointerColor="'#ff0000'"
-				:showCenterButton="true"
+				:items="nameItems"
 				spinButtonText="RUN"
-				:centerButtonSize="100"
-				:centerButtonFontSize="18"
 				@spin-start="handleSpinStart"
 				@spin-end="handleFoodSelected"
 			/>
@@ -96,7 +88,7 @@ export default {
 		return {
 			foodSelected: null,
 			isSpinning: false,
-			foodItems: [
+			nameItems: [
 				{
 					id: 1,
 					label: 'Green',
@@ -182,7 +174,7 @@ export default {
 
 				setTimeout(() => {
 					// Randomly select a winning item ID
-					const randomItem = this.foodItems[Math.floor(Math.random() * this.foodItems.length)]
+					const randomItem = this.nameItems[Math.floor(Math.random() * this.nameItems.length)]
 					console.log(`API responded after ${delay.toFixed(0)}ms with winning item:`, randomItem.label)
 
 					resolve({
@@ -193,6 +185,7 @@ export default {
 			})
 		},
 
+		// BE handle gọi API gọi quà
 		async handleSpinStart() {
 			console.log('🎯 Spin started! Calling API...')
 
@@ -229,77 +222,76 @@ export default {
 </script>
 
 <style scoped>
-/* Modal Overlay Transitions */
-.modal-enter-active,
-.modal-leave-active {
-	transition: opacity 0.3s ease;
-}
-
-.modal-enter-active .modal-dialog,
-.modal-leave-active .modal-dialog {
-	transition: all 0.3s ease-out;
-}
-
-.modal-enter-from {
-	opacity: 0;
-}
-
-.modal-enter-from .modal-dialog {
-	opacity: 0;
-	transform: scale(0.9) translateY(-20px);
-}
-
-.modal-leave-to {
-	opacity: 0;
-}
-
-.modal-leave-to .modal-dialog {
-	opacity: 0;
-	transform: scale(0.95) translateY(-10px);
-}
-
-/* Confetti Styles */
-.confetti-container {
-	z-index: 51;
-}
-
-.confetti {
-	position: absolute;
-	top: -10px;
-	border-radius: 50%;
-	animation: confetti-fall linear forwards;
-	opacity: 0;
-}
-
-@keyframes confetti-fall {
-	0% {
-		opacity: 1;
-		transform: translateY(0) rotate(0deg);
+	.modal-enter-active,
+	.modal-leave-active {
+		transition: opacity 0.3s ease;
 	}
-	100% {
+
+	.modal-enter-active .modal-dialog,
+	.modal-leave-active .modal-dialog {
+		transition: all 0.3s ease-out;
+	}
+
+	.modal-enter-from {
 		opacity: 0;
-		transform: translateY(100vh) rotate(720deg);
 	}
-}
 
-/* Confetti shapes variation */
-.confetti:nth-child(3n) {
-	border-radius: 0;
-	transform: rotate(45deg);
-}
+	.modal-enter-from .modal-dialog {
+		opacity: 0;
+		transform: scale(0.9) translateY(-20px);
+	}
 
-.confetti:nth-child(3n+1) {
-	border-radius: 50%;
-}
+	.modal-leave-to {
+		opacity: 0;
+	}
 
-.confetti:nth-child(3n+2) {
-	border-radius: 0;
-	width: 0;
-	height: 0;
-	border-left: 5px solid transparent;
-	border-right: 5px solid transparent;
-	border-bottom: 10px solid;
-	background: transparent !important;
-}
+	.modal-leave-to .modal-dialog {
+		opacity: 0;
+		transform: scale(0.95) translateY(-10px);
+	}
+
+	/* Confetti Styles */
+	.confetti-container {
+		z-index: 51;
+	}
+
+	.confetti {
+		position: absolute;
+		top: -10px;
+		border-radius: 50%;
+		animation: confetti-fall linear forwards;
+		opacity: 0;
+	}
+
+	@keyframes confetti-fall {
+		0% {
+			opacity: 1;
+			transform: translateY(0) rotate(0deg);
+		}
+		100% {
+			opacity: 0;
+			transform: translateY(100vh) rotate(720deg);
+		}
+	}
+
+	/* Confetti shapes variation */
+	.confetti:nth-child(3n) {
+		border-radius: 0;
+		transform: rotate(45deg);
+	}
+
+	.confetti:nth-child(3n+1) {
+		border-radius: 50%;
+	}
+
+	.confetti:nth-child(3n+2) {
+		border-radius: 0;
+		width: 0;
+		height: 0;
+		border-left: 5px solid transparent;
+		border-right: 5px solid transparent;
+		border-bottom: 10px solid;
+		background: transparent !important;
+	}
 </style>
 
