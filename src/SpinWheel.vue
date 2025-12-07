@@ -11,33 +11,39 @@
       preserveAspectRatio="xMidYMid meet"
     >
       <defs>
-        <!-- <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-          <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3" />
-        </filter> -->
-        <pattern id="borderPattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
-          <path d="M 0 15 L 7.5 15 L 7.5 7.5 L 15 7.5 L 15 0 L 22.5 0 L 22.5 7.5 L 30 7.5 L 30 15 L 22.5 15 L 22.5 22.5 L 15 22.5 L 15 30 L 7.5 30 L 7.5 22.5 L 0 22.5 Z"
-            fill="#4a9b8e" opacity="0.8"/>
-          <path d="M 7.5 7.5 L 15 7.5 L 15 15 L 7.5 15 Z" fill="#6bb3a6" opacity="0.6"/>
-          <path d="M 15 15 L 22.5 15 L 22.5 22.5 L 15 22.5 Z" fill="#6bb3a6" opacity="0.6"/>
+        <pattern id="greekKeyBlock" width="0.08" height="1" patternUnits="objectBoundingBox">
+          <path
+            d="M0 40
+              L0 10
+              L30 10
+              L30 30
+              L10 30
+              L10 20
+              L20 20
+              L20 0
+              L40 0
+              L40 20
+              L60 20
+              L60 10
+              L30 10"
+            stroke="#FFD700"
+            stroke-width="10"
+            fill="none"
+          />
         </pattern>
-				<pattern id="goldPattern" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
-
-				<!-- Vàng nền -->
-				<rect width="30" height="30" fill="#eacb64" />
-
-				<!-- Ô vàng đậm -->
-				<rect x="0" y="0" width="15" height="15" fill="#d4a93a" />
-				<rect x="15" y="15" width="15" height="15" fill="#d4a93a" />
-
-				<!-- Ô vàng sáng -->
-				<rect x="7.5" y="7.5" width="15" height="15" fill="#f8e29c" />
-
-				<!-- Ô trung gian -->
-				<rect x="0" y="15" width="15" height="15" fill="#e8c45b" />
-				<rect x="15" y="0" width="15" height="15" fill="#e8c45b" />
-
-				</pattern>
+        <pattern id="borderPatternImage" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+          <image :href="borderPatternImage" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid slice" />
+        </pattern>
       </defs>
+      <!-- Greek Key circular border -->
+      <circle
+        :cx="size/2"
+        :cy="size/2"
+        :r="(size/2) - 10"
+        stroke="url(#greekKeyBlock)"
+        :stroke-width="borderWidth"
+        fill="none"
+      />
       <g :transform="`translate(${size / 2}, ${size / 2})`">
         <g v-for="(item, index) in items" :key="index">
           <path
@@ -47,6 +53,12 @@
             :stroke-width="borderWidth"
             filter="url(#shadow)"
             class="sector"
+          />
+          <!-- Greek key pattern border motif around segment -->
+          <path
+            :d="getSegmentBorderPath(index)"
+            class="sector-border-pattern"
+            fill="url(#borderPatternImage)"
           />
           <!-- hình trong item -->
           <g v-if="item.image" :transform="getImageTransform(index)">
@@ -160,6 +172,10 @@ export default {
     spins: {
       type: Number,
       default: 5
+    },
+    borderPatternImage: {
+      type: String,
+      default: 'assets/greek-key-pattern.png'
     }
   },
   emits: ['spinStart', 'spinEnd'],
@@ -172,7 +188,8 @@ export default {
       isFinalizing: false,
       spinningAnimationId: null,
       finalizeAnimationId: null,
-      shouldStopSpinning: false
+      shouldStopSpinning: false,
+      borderWidth: 1
     }
   },
   computed: {
@@ -206,6 +223,35 @@ export default {
       const largeArc = this.anglePerItem > 180 ? 1 : 0
 
       return `M 0 0 L ${x1} ${y1} A ${this.radius} ${this.radius} 0 ${largeArc} 1 ${x2} ${y2} Z`
+    },
+
+    // Generate border path for Greek key pattern motif around segment
+    getSegmentBorderPath(index) {
+      const borderWidth = 15 // Width of the decorative border
+      const outerRadius = this.radius
+      const innerRadius = this.radius - borderWidth
+
+      const startAngle = (index * this.anglePerItem - 90) * (Math.PI / 180)
+      const endAngle = ((index + 1) * this.anglePerItem - 90) * (Math.PI / 180)
+
+      const x1Outer = outerRadius * Math.cos(startAngle)
+      const y1Outer = outerRadius * Math.sin(startAngle)
+      const x2Outer = outerRadius * Math.cos(endAngle)
+      const y2Outer = outerRadius * Math.sin(endAngle)
+
+      const x1Inner = innerRadius * Math.cos(startAngle)
+      const y1Inner = innerRadius * Math.sin(startAngle)
+      const x2Inner = innerRadius * Math.cos(endAngle)
+      const y2Inner = innerRadius * Math.sin(endAngle)
+
+      const largeArc =  0
+
+      // Create a ring path: outer arc -> line -> inner arc (reverse) -> line back
+      return `M ${x1Outer} ${y1Outer}
+              A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${x2Outer} ${y2Outer}
+              L ${x2Inner} ${y2Inner}
+              A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${x1Inner} ${y1Inner}
+              Z`
     },
 
     // điều chỉnh hướng của text trong item
@@ -415,7 +461,7 @@ export default {
   /* 3 vòng bo tròn */
   box-shadow:
     0 0 0 10px #fdf3bf,
-    0 0 0px 20px #01aa8d,
+    0 0 10px 20px #01aa8d,
     0 0 0 30px #053b2b;
   /* Responsive sizing - maintain perfect circle */
   width: 100%;
@@ -428,9 +474,9 @@ export default {
 @media (max-width: 768px) {
   .spin-wheel-container {
     box-shadow:
-      0 0 0 5px #fdf3bf,
-      0 0 0px 10px #01aa8d,
-      0 0 0 15px #053b2b;
+      0 0 0 10px #fdf3bf,
+      0 0 10px 20px #01aa8d,
+      0 0 0 30px #053b2b;
   }
 }
 
@@ -438,7 +484,7 @@ export default {
   .spin-wheel-container {
     box-shadow:
       0 0 0 3px #fdf3bf,
-      0 0 0px 6px #01aa8d,
+      0 0 5px 6px #01aa8d,
       0 0 0 9px #053b2b;
   }
 }
@@ -446,6 +492,7 @@ export default {
 .sector {
   cursor: pointer;
   transition: opacity 0.2s;
+  /* border-image doesn't work on SVG elements - use stroke with pattern instead */
 }
 
 .spin-wheel-svg {
