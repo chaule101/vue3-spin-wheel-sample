@@ -32,7 +32,7 @@
           />
         </pattern>
         <pattern id="borderPatternImage" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-          <image :href="borderPatternImage" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid slice" />
+          <image :href="borderPatternImageUrl" x="0" y="0" width="100" height="100" preserveAspectRatio="xMidYMid slice" />
         </pattern>
       </defs>
       <!-- Greek Key circular border -->
@@ -167,11 +167,11 @@ export default {
     },
     duration: {
       type: Number,
-      default: 4000
+      default: 8000
     },
     spins: {
       type: Number,
-      default: 5
+      default: 10
     },
     borderPatternImage: {
       type: String,
@@ -208,6 +208,12 @@ export default {
       }
       return [this.spinButtonText]
     },
+    borderPatternImageUrl() {
+      if (this.borderPatternImage && !this.borderPatternImage.startsWith('http') && !this.borderPatternImage.startsWith('/')) {
+        return `${import.meta.env.BASE_URL}${this.borderPatternImage}`
+      }
+      return this.borderPatternImage
+    }
   },
   methods: {
 
@@ -302,7 +308,7 @@ export default {
       let lastTime = startTime
 
       // Speed configuration - constant smooth speed
-      const constantSpeed = 360 // degrees per second - constant moderate speed
+      const constantSpeed = 180 // degrees per second - constant moderate speed (reduced for slower spinning)
 
       const spinningAnimation = () => {
         // Stop immediately if flagged

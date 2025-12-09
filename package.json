@@ -40,11 +40,12 @@
     "build": "vue-tsc --project tsconfig.build.json && vite build",
     "build:demo": "vite build --config vite.demo.config.ts",
     "preview": "vite preview",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "deploy": "npm run build:demo && gh-pages -d dist"
   },
-  "dependencies": {},
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
+    "gh-pages": "^6.3.0",
     "postcss": "^8.4.32",
     "tailwindcss": "^3.4.0",
     "typescript": "^5.3.0",
@@ -53,4 +54,3 @@
     "vue-tsc": "^1.8.0"
   }
 }
-
