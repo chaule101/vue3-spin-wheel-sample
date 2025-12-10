@@ -184,11 +184,10 @@ export default {
       rotation: 0,
       isSpinning: false,
       serverResultId: null,
-      minSpinTime: 2000,
-      isFinalizing: false,
+      constantSpeedDuration: 2000, // 5 seconds at constant speed after result received
+      spinningSpeed: 800, // degrees per second - constant spinning speed
       spinningAnimationId: null,
-      finalizeAnimationId: null,
-      shouldStopSpinning: false,
+      initialRotation: 0,
       borderWidth: 1
     }
   },
@@ -285,181 +284,147 @@ export default {
       // return `translate(${x}, ${y}) rotate(${rotationAngle > 90 && rotationAngle < 270 ? rotationAngle + 180 : rotationAngle})`
     },
 
-    // action bấm quay
+    // action bấm quay - SIMPLIFIED VERSION
     async spin() {
       if (this.isSpinning || this.items.length === 0) return
 
-      // Clean up any existing animations
-      if (this.spinningAnimationId) {
-        cancelAnimationFrame(this.spinningAnimationId)
-        this.spinningAnimationId = null
-      }
-      if (this.finalizeAnimationId) {
-        cancelAnimationFrame(this.finalizeAnimationId)
-        this.finalizeAnimationId = null
-      }
-
       this.isSpinning = true
       this.serverResultId = null
-      this.isFinalizing = false
-      this.shouldStopSpinning = false
+      this.initialRotation = this.rotation
 
-      const startTime = Date.now()
-      let lastTime = startTime
+      // 1) Start constant-speed spinning immediately
+      this.startConstantSpeedSpin()
 
-      // Speed configuration - constant smooth speed
-      const constantSpeed = 180 // degrees per second - constant moderate speed (reduced for slower spinning)
+      // 2) Wait for 3 rounds before calling API
+      await this.waitForRounds(3)
 
-      const spinningAnimation = () => {
-        // Stop immediately if flagged
-        if (this.shouldStopSpinning || this.isFinalizing) {
-          this.spinningAnimationId = null
-          return
-        }
+      // 3) Emit event to request result from parent
+      this.$emit('spinStart')
+      // Parent will call setSpinResult(itemId) when API returns
 
-        const now = Date.now()
+      // 4) Wait until we have a result
+      await this.waitForResult()
+
+      // 5) Keep spinning at constant speed for exactly 5 seconds
+      await this.wait(this.constantSpeedDuration)
+
+      // 6) Decelerate smoothly to land on the target
+      await this.decelerateToResult()
+
+      this.isSpinning = false
+    },
+
+    startConstantSpeedSpin() {
+      let lastTime = performance.now()
+
+      const step = (now) => {
+        if (!this.isSpinning) return
+
         const deltaTime = now - lastTime
         lastTime = now
 
-        // Use constant speed for smooth, consistent spinning
-        const rotationIncrement = (constantSpeed * deltaTime) / 1000
-        this.rotation += rotationIncrement
+        // Constant speed rotation with frame-rate independent timing
+        this.rotation += (this.spinningSpeed * deltaTime) / 1000
 
-        const elapsed = now - startTime
-
-        // Continue spinning if no result yet or minimum time not reached
-        if (!this.serverResultId || elapsed < this.minSpinTime) {
-          if (!this.shouldStopSpinning && !this.isFinalizing) {
-            this.spinningAnimationId = requestAnimationFrame(spinningAnimation)
-          }
-        } else {
-          // Stop the spinning animation and start finalizing
-          this.shouldStopSpinning = true
-          this.spinningAnimationId = null
-          // Use next frame to ensure spinning has stopped
-          this.finalizeAnimationId = requestAnimationFrame(() => {
-            this.finalizeSpinToResult()
-          })
-        }
+        this.spinningAnimationId = requestAnimationFrame(step)
       }
 
-      this.spinningAnimationId = requestAnimationFrame(spinningAnimation)
-      this.$emit('spinStart')
+      this.spinningAnimationId = requestAnimationFrame(step)
+    },
+
+    async waitForRounds(rounds) {
+      return new Promise((resolve) => {
+        const check = () => {
+          const totalRotation = this.rotation - this.initialRotation
+          const currentRounds = Math.floor(Math.abs(totalRotation) / 360)
+
+          if (currentRounds >= rounds) {
+            resolve()
+          } else {
+            requestAnimationFrame(check)
+          }
+        }
+        check()
+      })
+    },
+
+    async waitForResult() {
+      return new Promise((resolve) => {
+        const check = () => {
+          if (this.serverResultId) {
+            resolve()
+          } else {
+            setTimeout(check, 50) // Check every 50ms
+          }
+        }
+        check()
+      })
+    },
+
+    async wait(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms))
     },
 
     setSpinResult(itemId) {
       const resultIndex = this.items.findIndex(item => item.id === itemId)
-      if (resultIndex !== -1) {
+      if (resultIndex !== -1 && !this.serverResultId) {
         this.serverResultId = itemId
       }
     },
 
-    ressetSpinState() {
-      this.isSpinning = false
-      this.isFinalizing = false
-    },
-
-    finalizeSpinToResult() {
-      // prevent calling multiple times
-      if (this.isFinalizing) {
-        return
-      }
-      // Tìm index của item trúng thưởng
-      const resultIndex = this.items.findIndex(item => item.id === this.serverResultId)
-      if (resultIndex === -1) {
-        this.ressetSpinState()
-        return
-      }
-
-      // đánh dấu là đang finalizing để tránh gọi lại
-      this.isFinalizing = true
-      this.shouldStopSpinning = true
-
-      // Stop mọi animation đang chạy
+    async decelerateToResult() {
+      // Stop the constant speed animation first
       if (this.spinningAnimationId) {
         cancelAnimationFrame(this.spinningAnimationId)
         this.spinningAnimationId = null
       }
-      if (this.finalizeAnimationId) {
-        cancelAnimationFrame(this.finalizeAnimationId)
-        this.finalizeAnimationId = null
-      }
 
-      // lấy giá trị rotation hiện tại (có thể rất lớn do continuous spinning)
-      const currentRotation = this.rotation
+      // Find the result index
+      const resultIndex = this.items.findIndex(item => item.id === this.serverResultId)
+      if (resultIndex === -1) return
 
-      // tính toán offset của pointer dựa trên vị trí của pointer
-      // các item được đo từ trên (0 độ) theo chiều kim đồng hồ
-      let pointerOffset = 0
-      switch (this.pointerPosition) {
-        case 'top':
-          pointerOffset = 0
-          break
-        case 'right':
-          pointerOffset = 90
-          break
-        case 'bottom':
-          pointerOffset = 180
-          break
-        case 'left':
-          pointerOffset = 270
-          break
-      }
+      // Calculate pointer offset based on position
+      const pointerOffsets = { top: 0, right: 90, bottom: 180, left: 270 }
+      const pointerOffset = pointerOffsets[this.pointerPosition] || 0
 
-      // tính toán góc mục tiêu cho item (vị trí mà pointer nên trỏ đến)
-      // item ở index i có tâm tại: i * anglePerItem + anglePerItem / 2 (đo từ trên, theo chiều kim đồng hồ)
-      // để đặt tâm item trùng với pointer, chúng ta cần: (pointerOffset - itemCenterAngle) mod 360
+      // Calculate target angle
       const itemCenterAngle = resultIndex * this.anglePerItem + this.anglePerItem / 2
       const targetAngleNormalized = ((pointerOffset - itemCenterAngle) % 360 + 360) % 360
+      const currentRotationNormalized = ((this.rotation % 360) + 360) % 360
 
-      // chuẩn hóa rotation hiện tại thành khoảng 0-360 để tính toán sự khác biệt
-      const currentRotationNormalized = ((currentRotation % 360) + 360) % 360
-
-      // tính toán sự khác biệt giữa rotation hiện tại và mục tiêu
+      // Calculate angle difference (always rotate forward)
       let angleDifference = targetAngleNormalized - currentRotationNormalized
+      if (angleDifference < 0) angleDifference += 360
 
-      // luôn quay theo chiều kim đồng hồ (hướng dương)
-      // nếu sự khác biệt là âm, thêm 360 để làm dương
-      if (angleDifference < 0) {
-        angleDifference += 360
-      }
+      // Add extra rounds for visual effect
+      const extraRounds = 2
+      const targetRotation = this.rotation + (extraRounds * 360) + angleDifference
 
-      // luôn quay thêm 'spins' số vòng tròn để tạo hiệu ứng quay tự nhiên
-      const extraRounds = this.spins
-      const totalAdditionalRotation = extraRounds * 360 + angleDifference
+      // Smooth deceleration using easeOutCubic
+      return new Promise((resolve) => {
+        const startRotation = this.rotation
+        const startTime = performance.now()
+        const duration = 3000 // 3 seconds
 
-      // Start the smooth animation to the target
-      const startRotation = currentRotation
-      const endRotation = startRotation + totalAdditionalRotation
+        const animate = (now) => {
+          const elapsed = now - startTime
+          const progress = Math.min(elapsed / duration, 1)
 
-      const startTime = Date.now()
-      const duration = this.duration
+          // EaseOutCubic for smooth deceleration
+          const eased = 1 - Math.pow(1 - progress, 3)
+          this.rotation = startRotation + (targetRotation - startRotation) * eased
 
-      const animate = () => {
-        // kiểm tra xem có nên tiếp tục không (tránh xung đột)
-        if (!this.isFinalizing) {
-          return
+          if (progress < 1) {
+            requestAnimationFrame(animate)
+          } else {
+            this.rotation = targetRotation
+            this.$emit('spinEnd', this.items[resultIndex], resultIndex)
+            resolve()
+          }
         }
 
-        const elapsed = Date.now() - startTime
-        const progress = Math.min(elapsed / duration, 1)
-        // ease-out cubic cho hiệu ứng giảm tốc độ mượt mà
-        const easeOut = 1 - Math.pow(1 - progress, 3)
-        this.rotation = startRotation + (totalAdditionalRotation * easeOut)
-
-        if (progress < 1) {
-          this.finalizeAnimationId = requestAnimationFrame(animate)
-        } else {
-          // animation hoàn thành
-          this.rotation = endRotation
-          this.ressetSpinState()
-          this.finalizeAnimationId = null
-          this.$emit('spinEnd', this.items[resultIndex], resultIndex)
-          this.serverResultId = null
-        }
-      }
-
-      this.finalizeAnimationId = requestAnimationFrame(animate)
+        requestAnimationFrame(animate)
+      })
     }
   }
 }
