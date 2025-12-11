@@ -189,7 +189,7 @@ export default {
 		async handleSpinStart() {
 			console.log('🎯 Spin started! Calling API...')
 
-			// Clear the previous selected item and mark as spinning
+			// Clear the previous selected item
 			this.foodSelected = null
 			this.isSpinning = true
 
@@ -203,7 +203,6 @@ export default {
 				this.$refs.spinWheel.setSpinResult(data.itemId)
 			} catch (error) {
 				console.error('❌ Error fetching spin result:', error)
-				// Handle error - you might want to stop the spin or show an error message
 				this.isSpinning = false
 			}
 		},

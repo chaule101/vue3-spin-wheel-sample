@@ -284,7 +284,7 @@ export default {
       // return `translate(${x}, ${y}) rotate(${rotationAngle > 90 && rotationAngle < 270 ? rotationAngle + 180 : rotationAngle})`
     },
 
-    // action bấm quay - SIMPLIFIED VERSION
+    // action bấm quay
     async spin() {
       if (this.isSpinning || this.items.length === 0) return
 
@@ -292,23 +292,23 @@ export default {
       this.serverResultId = null
       this.initialRotation = this.rotation
 
-      // 1) Start constant-speed spinning immediately
+      // Start constant-speed spinning immediately
       this.startConstantSpeedSpin()
 
-      // 2) Wait for 3 rounds before calling API
+      // Wait for 3 rounds before calling API
       await this.waitForRounds(3)
 
-      // 3) Emit event to request result from parent
+      // Emit event to request result from parent
       this.$emit('spinStart')
       // Parent will call setSpinResult(itemId) when API returns
 
-      // 4) Wait until we have a result
+      // Wait until we have a result
       await this.waitForResult()
 
-      // 5) Keep spinning at constant speed for exactly 5 seconds
+      // Keep spinning at constant speed for exactly 5 seconds
       await this.wait(this.constantSpeedDuration)
 
-      // 6) Decelerate smoothly to land on the target
+      // Decelerate smoothly to land on the target
       await this.decelerateToResult()
 
       this.isSpinning = false
