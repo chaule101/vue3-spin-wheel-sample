@@ -1,0 +1,30 @@
+# Source files (only dist should be published)
+src/
+demo/
+node_modules/
+
+# Configuration files (not needed in package)
+*.config.js
+*.config.ts
+tsconfig*.json
+vite*.config.ts
+tailwind.config.js
+postcss.config.js
+
+# Development files
+index.html
+.git/
+.gitignore
+*.md
+!README.md
+
+# Build artifacts that shouldn't be published
+*.log
+.DS_Store
+.env*
+
+# Test files
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js

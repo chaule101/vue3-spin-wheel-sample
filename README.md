@@ -62,42 +62,42 @@ import 'vue3-spin-wheel/dist/style.css'
 
 const spinWheel = ref(null)
 const items = [
-        // {
-				// 	id: id,
-				// 	label: tên trên slice,
-				// 	color: màu background trên slice (ko truyền sẽ lấy màu default như design ban đầu),
-				// 	textColor: màu text trên slice (ko truyền sẽ lấy màu default như design ban đầu),
-				// 	value: value,
-				// 	image: hình,
-				// 	imageSize: size hình
-				// },
-        {
-					id: 1,
-					label: 'Green',
-					color: '#E8D5FF',
-					textColor: '',
-					value: 'hoa-hiep',
-					image: 'https://picsum.photos/200/300',
-					imageSize: 80
-				},
-				{
-					id: 2,
-					label: 'Ron',
-					color: '#D4A574',
-					textColor: '#8B4513',
-					value: 'bach-bao',
-					image: 'https://picsum.photos/seed/picsum/200/300',
-					imageSize: 80
-				},
-				{
-					id: 3,
-					label: 'Alex',
-					color: '#B8E6FF',
-					textColor: '#0066CC',
-					value: 'tinh-long',
-					image: 'https://picsum.photos/200/300?grayscale',
-					imageSize: 80
-				},
+	// {
+	// 	id: id,
+	// 	label: tên trên slice,
+	// 	color: màu background trên slice (ko truyền sẽ lấy màu default như design ban đầu),
+	// 	textColor: màu text trên slice (ko truyền sẽ lấy màu default như design ban đầu),
+	// 	value: value,
+	// 	image: hình,
+	// 	imageSize: size hình
+	// },
+	{
+		id: 1,
+		label: 'Green',
+		color: '#E8D5FF',
+		textColor: '',
+		value: 'hoa-hiep',
+		image: 'https://picsum.photos/200/300',
+		imageSize: 80
+	},
+	{
+		id: 2,
+		label: 'Ron',
+		color: '#D4A574',
+		textColor: '#8B4513',
+		value: 'bach-bao',
+		image: 'https://picsum.photos/seed/picsum/200/300',
+		imageSize: 80
+	},
+	{
+		id: 3,
+		label: 'Alex',
+		color: '#B8E6FF',
+		textColor: '#0066CC',
+		value: 'tinh-long',
+		image: 'https://picsum.photos/200/300?grayscale',
+		imageSize: 80
+	},
 ]
 
 const handleSpinStart = async () => {
@@ -133,7 +133,11 @@ const handleSpinEnd = (item, index) => {
 
 ## License
 
-## Inluce in page with congrats dialog (sample)
+MIT
+
+## Complete Example: Include in page with congrats dialog
+
+```vue
 <template>
 	<div class="min-h-screen flex flex-col items-center justify-center max-w-7xl mx-auto px-4 py-10">
 		<h1 class="text-center text-blue text-4xl mb-10 drop-shadow-lg">
@@ -213,7 +217,8 @@ const handleSpinEnd = (item, index) => {
 </template>
 
 <script>
-import { SpinWheel } from '../src/index'
+import { SpinWheel } from 'vue3-spin-wheel'
+import 'vue3-spin-wheel/dist/style.css'
 
 export default {
 	name: 'App',
@@ -429,6 +434,7 @@ export default {
 		background: transparent !important;
 	}
 </style>
+```
 
 
 

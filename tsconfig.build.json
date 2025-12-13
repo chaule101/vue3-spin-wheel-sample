@@ -1,6 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
+    "allowJs": true,
     "noEmit": false,
     "declaration": true,
     "declarationDir": "./dist",
@@ -9,4 +10,3 @@
   "include": ["src/**/*.ts", "src/**/*.vue"],
   "exclude": ["node_modules", "demo", "dist"]
 }
-
